@@ -1,0 +1,7 @@
+# Build files
+*.o
+proctrack
+
+# macOS system files
+.DS_Store
+
