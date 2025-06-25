@@ -1,37 +1,49 @@
-#include "../include/process.hpp"
-#include <iostream>
 #include <vector>
 #include <string>
 #include <sstream>
-#include <cstdlib>
+#include <cstdio>
+#include "../include/process.hpp"
+#include <ncurses.h>
 
-void printRunningProcesses() {
-    std::cout << "\nRunning Processes:\n";
-    std::cout << "------------------\n";
+void printRunningProcessesNcurses(int startRow) {
+    auto processes = getRunningProcesses();  // assuming this function exists
 
-    FILE* pipe = popen("ps -axo pid,comm", "r");
-    if (!pipe) {
-        std::cerr << "Failed to fetch processes\n";
-        return;
+    int row = startRow;
+    for (const auto& p : processes) {
+        mvprintw(row++, 4, "%-7d %-10s %-20s", p.pid, p.user.c_str(), p.command.c_str());
+        if (row > LINES - 2) break;
     }
+}
 
-    char buffer[256];
-    bool skipHeader = true;
+
+std::vector<ProcessInfo> getRunningProcesses() {
+    std::vector<ProcessInfo> processes;
+
+    FILE* pipe = popen("ps -axo pid,user,args | head -n 15", "r");
+    if (!pipe) return processes;
+
+    char buffer[512];
+    fgets(buffer, sizeof(buffer), pipe);  // Skip header
+
     while (fgets(buffer, sizeof(buffer), pipe)) {
-        if (skipHeader) {
-            skipHeader = false;
-            continue; 
-        }
-
+        ProcessInfo p;
         std::string line(buffer);
         std::istringstream iss(line);
-        std::string pid, command;
 
-        iss >> pid;
-        getline(iss, command);
+        if (!(iss >> p.pid >> p.user)) continue;
 
-        std::cout << "PID: " << pid << " | Command: " << command << std::endl;
+        // Safely extract command after user
+        size_t cmd_pos = line.find(p.user) + p.user.length();
+        if (cmd_pos != std::string::npos) {
+            p.command = line.substr(cmd_pos);
+            p.command.erase(0, p.command.find_first_not_of(" \t"));  // Trim leading spaces
+        } else {
+            p.command = "";
+        }
+
+        processes.push_back(p);
     }
 
     pclose(pipe);
+    return processes;
 }

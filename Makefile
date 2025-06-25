@@ -1,15 +1,16 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Iinclude
+CXXFLAGS = -std=c++17 -Wall
 LDFLAGS = -lncurses
 
-SRC = src/main.cpp src/cpu.cpp src/memory.cpp src/process.cpp
-OBJ = $(SRC:.cpp=.o)
-BIN = proctrack
+SRCS = src/main.cpp src/cpu.cpp src/memory.cpp src/process.cpp
+OBJS = $(SRCS:.cpp=.o)
 
-all: $(BIN)
+TARGET = proctrack
 
-$(BIN): $(OBJ)
+all: $(TARGET)
+
+$(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
 clean:
-	rm -f $(OBJ) $(BIN)
+	rm -f $(TARGET) src/*.o
