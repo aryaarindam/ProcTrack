@@ -11,6 +11,7 @@ struct ProcessInfo {
 };
 
 std::vector<ProcessInfo> getRunningProcesses();
+
 void printRunningProcessesNcurses(int startRow);
 
 #endif
